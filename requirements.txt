@@ -1,0 +1,21 @@
+# NetGuard AI - Pinned Dependencies
+# Python Version: 3.12+
+
+# --- API & Web Service (api/) ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+websockets==14.2
+httpx==0.28.1
+requests==2.32.3
+
+# --- ML & Data Processing (ml/) ---
+numpy==2.2.1
+pandas==2.2.3
+scikit-learn==1.6.1
+joblib==1.4.2
+
+# --- Packet Capture (capture/) ---
+# NOTE: Per project rules, Scapy is NOT installed automatically during setup.
+# When ready for live packet capture, install:
+# scapy==2.6.1
