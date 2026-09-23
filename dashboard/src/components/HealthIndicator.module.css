@@ -1,0 +1,42 @@
+.wrapper {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xxs);
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: var(--space-xxs) var(--space-sm);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.unknown {
+  color: var(--color-text-faint);
+}
+
+.ok {
+  color: var(--color-accent);
+  border-color: var(--color-accent-soft);
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+}
+
+.down {
+  color: var(--color-danger);
+  border-color: color-mix(in srgb, var(--color-danger) 30%, var(--color-border));
+  background: color-mix(in srgb, var(--color-danger) 6%, var(--color-surface));
+}
