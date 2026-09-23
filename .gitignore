@@ -40,3 +40,9 @@ Thumbs.db
 .vscode/
 .env
 *.log
+
+# Agent / skill library files (not project code)
+.agents/
+.kiro/
+DESIGN.md
+skills-lock.json
