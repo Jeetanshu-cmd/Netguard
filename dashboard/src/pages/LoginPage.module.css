@@ -1,0 +1,122 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: var(--color-bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  color: var(--color-text);
+}
+
+.brandMark {
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xxs);
+}
+
+.field label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+.field input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  font-family: var(--font-sans);
+}
+
+.field input::placeholder {
+  color: var(--color-text-placeholder);
+}
+
+.field input:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--color-danger-deep);
+  font-size: 0.8125rem;
+}
+
+.formError {
+  margin: 0;
+  color: var(--color-danger-deep);
+  font-size: 0.875rem;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.submitButton {
+  background: var(--color-text);
+  color: var(--color-surface);
+  border: none;
+  border-radius: var(--radius-pill);
+  height: 40px;
+  padding: 0 var(--space-md);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--color-text-muted);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-faint);
+  text-align: center;
+}
