@@ -1,0 +1,125 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.heading {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0;
+  text-wrap: balance;
+  color: var(--color-text);
+}
+
+.description {
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  margin: var(--space-xs) 0 var(--space-lg);
+}
+
+.formError {
+  color: var(--color-danger-deep);
+  font-size: 0.875rem;
+  background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.emptyState {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.alertList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.alertCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.alertCardMuted {
+  opacity: 0.65;
+}
+
+.alertMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.count {
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.alertMeta {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  flex: 1;
+}
+
+.ackButton {
+  margin-left: auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0 var(--space-sm);
+  height: 32px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  touch-action: manipulation;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.ackButton:hover {
+  border-color: var(--color-text-faint);
+  background: var(--color-surface-raised);
+}
+
+.resolvedGroup {
+  margin-top: var(--space-lg);
+  color: var(--color-text-muted);
+}
+
+.resolvedGroup summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: var(--space-xs) 0;
+}
+
+.resolvedGroup .alertList {
+  margin-top: var(--space-sm);
+}
