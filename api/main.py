@@ -10,7 +10,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.config import settings
 from api.inference import model_service
-from api.routes import predict, system
+from api.db import init_db
+from api.routes import alerts, flows, predict, stats, system
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("netguard.main")
@@ -22,6 +23,10 @@ async def lifespan(app: FastAPI):
         model_service.load()
     except FileNotFoundError as exc:
         logger.warning("Model not loaded at startup: %s", exc)
+    try:
+        init_db()
+    except Exception as exc:
+        logger.warning("Database init failed: %s", exc)
     yield
 
 
@@ -37,9 +42,11 @@ app.add_middleware(
 
 app.include_router(system.router)
 app.include_router(predict.router)
+app.include_router(flows.router)
+app.include_router(alerts.router)
+app.include_router(stats.router)
 
 # Added in later branches:
 #   api/ingest      -> ingest.router
 #   api/websocket   -> ws.router
-#   api/db-history  -> flows.router, alerts.router, stats.router
 #   api/auth        -> auth.router

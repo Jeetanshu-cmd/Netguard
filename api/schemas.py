@@ -3,7 +3,7 @@ NetGuard AI — Pydantic schemas (api/schemas.py)
 Mirrors AGENTS.md §4 exactly. Don't rename fields without updating both.
 """
 
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 
@@ -57,3 +57,68 @@ class ModelInfoResponse(BaseModel):
     features_count: int
     features: List[str]
     alert_threshold: float
+
+
+# --- DB / History Schemas (api/db-history) ---
+
+
+class FlowResponse(BaseModel):
+    id: str
+    ts: float
+    src_ip: Optional[str] = None
+    dst_ip: Optional[str] = None
+    dst_port: Optional[int] = None
+    label: str
+    confidence: float
+    features: Optional[Dict[str, float]] = None
+    top_features: Optional[List[TopFeature]] = None
+
+    model_config = {"from_attributes": True}
+
+
+class FlowCreate(BaseModel):
+    id: Optional[str] = None
+    ts: Optional[float] = None
+    src_ip: Optional[str] = None
+    dst_ip: Optional[str] = None
+    dst_port: Optional[int] = None
+    label: str
+    confidence: float
+    features: Optional[Dict[str, float]] = None
+    top_features: Optional[List[TopFeature]] = None
+
+
+class AlertResponse(BaseModel):
+    id: int
+    first_seen: float
+    last_seen: float
+    src_ip: str
+    label: str
+    max_confidence: float
+    flow_count: int
+    status: str
+
+    model_config = {"from_attributes": True}
+
+
+class AlertCreate(BaseModel):
+    first_seen: Optional[float] = None
+    last_seen: Optional[float] = None
+    src_ip: str
+    label: str
+    max_confidence: float
+    flow_count: int = 1
+    status: str = "open"
+
+
+class StatsResponse(BaseModel):
+    total: int = 0
+    counts: Dict[str, int] = {}
+    by_label: Dict[str, int] = {}
+    Benign: int = 0
+    DoS_DDoS: int = 0
+    PortScan: int = 0
+    BruteForce: int = 0
+    window_seconds: Optional[float] = None
+    start_time: Optional[float] = None
+    end_time: Optional[float] = None

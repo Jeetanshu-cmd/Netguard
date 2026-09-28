@@ -7,7 +7,10 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 from sklearn.ensemble import RandomForestClassifier
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
+from api.db import Base, get_db
 from api.inference import model_service
 from api.main import app
 
@@ -43,8 +46,43 @@ def dummy_model_dir(tmp_path):
 
 
 @pytest.fixture
-def client(dummy_model_dir):
+def test_db(tmp_path):
+    db_file = tmp_path / "test_netguard.db"
+    test_db_url = f"sqlite:///{db_file}"
+    test_engine = create_engine(test_db_url, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=test_engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+    yield test_engine, TestingSessionLocal
+    Base.metadata.drop_all(bind=test_engine)
+    test_engine.dispose()
+
+
+@pytest.fixture
+def db_session(test_db):
+    _, TestingSessionLocal = test_db
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture
+def client(dummy_model_dir, test_db):
     model_service.model_dir = str(dummy_model_dir)
+    _, TestingSessionLocal = test_db
+
+    def override_get_db():
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+
     with TestClient(app) as test_client:
         yield test_client
+
+    app.dependency_overrides.clear()
     model_service.model = None
