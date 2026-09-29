@@ -12,6 +12,8 @@ from api.config import settings
 from api.inference import model_service
 from api.db import init_db
 from api.routes import alerts, flows, predict, stats, system
+from api.routes import predict, system  # ...and whatever else is already there
+from api import ws
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("netguard.main")
@@ -45,6 +47,7 @@ app.include_router(predict.router)
 app.include_router(flows.router)
 app.include_router(alerts.router)
 app.include_router(stats.router)
+app.include_router(ws.router)
 
 # Added in later branches:
 #   api/ingest      -> ingest.router
