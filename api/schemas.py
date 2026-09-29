@@ -122,3 +122,32 @@ class StatsResponse(BaseModel):
     window_seconds: Optional[float] = None
     start_time: Optional[float] = None
     end_time: Optional[float] = None
+
+
+# --- Ingest schemas (api/ingest) ---
+
+
+class IngestFlowInput(BaseModel):
+    id: Optional[str] = None
+    src_ip: Optional[str] = None
+    dst_ip: Optional[str] = None
+    dst_port: Optional[int] = None
+    timestamp: Optional[float] = None
+    features: Dict[str, float]
+
+
+class IngestRequest(BaseModel):
+    flows: List[IngestFlowInput]
+
+
+class IngestFlowResult(BaseModel):
+    id: str
+    label: str
+    confidence: float
+    top_features: List[TopFeature]
+    alert_triggered: bool
+    alert_id: Optional[int] = None
+
+
+class IngestResponse(BaseModel):
+    results: List[IngestFlowResult]
