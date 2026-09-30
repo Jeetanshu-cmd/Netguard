@@ -6,21 +6,34 @@ own event loop, so we can call the async broadcast_flow()/broadcast_alert()
 methods from the main test thread via asyncio.run() while a connection is
 open, the same way you'd trigger a broadcast from a synchronous route
 handler in production (FastAPI runs sync routes in a thread pool).
+
+/ws/flows requires a valid JWT (token query param). Each test that opens a
+WebSocket uses the `ws_token` fixture to get one.
 """
 
 import asyncio
 
+import pytest
+
 from api.ws import manager
 
 
-def test_client_can_connect_and_disconnect(client):
-    with client.websocket_connect("/ws/flows") as ws:
+@pytest.fixture
+def ws_token(client, seeded_user):
+    """Returns a valid JWT token string for the seeded admin user."""
+    resp = client.post("/auth/login", json={"username": "admin", "password": "testpass123"})
+    assert resp.status_code == 200
+    return resp.json()["access_token"]
+
+
+def test_client_can_connect_and_disconnect(client, ws_token):
+    with client.websocket_connect(f"/ws/flows?token={ws_token}") as ws:
         pass  # connecting and cleanly exiting the `with` block is the test
     assert len(manager.active_connections) == 0
 
 
-def test_broadcast_flow_reaches_connected_client(client):
-    with client.websocket_connect("/ws/flows") as ws:
+def test_broadcast_flow_reaches_connected_client(client, ws_token):
+    with client.websocket_connect(f"/ws/flows?token={ws_token}") as ws:
         flow_payload = {
             "id": "flow-1",
             "src_ip": "10.0.0.5",
@@ -37,8 +50,8 @@ def test_broadcast_flow_reaches_connected_client(client):
         assert received["label"] == "PortScan"
 
 
-def test_broadcast_alert_reaches_connected_client(client):
-    with client.websocket_connect("/ws/flows") as ws:
+def test_broadcast_alert_reaches_connected_client(client, ws_token):
+    with client.websocket_connect(f"/ws/flows?token={ws_token}") as ws:
         alert_payload = {
             "id": 1,
             "src_ip": "10.0.0.5",
@@ -55,18 +68,18 @@ def test_broadcast_alert_reaches_connected_client(client):
         assert received["flow_count"] == 3
 
 
-def test_broadcast_reaches_multiple_clients(client):
-    with client.websocket_connect("/ws/flows") as ws1:
-        with client.websocket_connect("/ws/flows") as ws2:
+def test_broadcast_reaches_multiple_clients(client, ws_token):
+    with client.websocket_connect(f"/ws/flows?token={ws_token}") as ws1:
+        with client.websocket_connect(f"/ws/flows?token={ws_token}") as ws2:
             assert len(manager.active_connections) == 2
             asyncio.run(manager.broadcast_flow({"id": "flow-2", "label": "Benign"}))
             assert ws1.receive_json()["id"] == "flow-2"
             assert ws2.receive_json()["id"] == "flow-2"
 
 
-def test_disconnected_client_is_dropped_without_crashing_broadcast(client):
-    with client.websocket_connect("/ws/flows") as ws1:
-        with client.websocket_connect("/ws/flows"):
+def test_disconnected_client_is_dropped_without_crashing_broadcast(client, ws_token):
+    with client.websocket_connect(f"/ws/flows?token={ws_token}") as ws1:
+        with client.websocket_connect(f"/ws/flows?token={ws_token}"):
             pass  # this one disconnects immediately
         # ws1 is still open; broadcasting must not raise even though the
         # second client is already gone.

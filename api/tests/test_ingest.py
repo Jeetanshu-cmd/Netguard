@@ -6,6 +6,11 @@ alert-triggering tests, since the dummy RandomForest fixture (trained on
 random data) can't be trusted to produce a specific label/confidence on
 demand — we only need to prove the ingest/alert/broadcast wiring here,
 not re-test classification (that's covered in test_predict.py).
+
+GET /flows and GET /alerts are JWT-protected dashboard routes, so tests
+that need to inspect stored data pass auth_headers.  POST /ingest/flows
+keeps its X-API-Key — that path is intentionally separate from JWT auth.
+/ws/flows also requires a JWT token as a query param.
 """
 
 from api.config import settings
@@ -42,7 +47,7 @@ def test_ingest_empty_flows_returns_empty_results(client):
     assert resp.json() == {"results": []}
 
 
-def test_ingest_classifies_and_stores_flow(client):
+def test_ingest_classifies_and_stores_flow(client, auth_headers):
     resp = client.post(
         "/ingest/flows",
         headers=VALID_HEADERS,
@@ -53,12 +58,12 @@ def test_ingest_classifies_and_stores_flow(client):
     assert result["id"] == "flow-a1"
     assert "label" in result and "confidence" in result
 
-    stored = client.get("/flows/flow-a1")
+    stored = client.get("/flows/flow-a1", headers=auth_headers)
     assert stored.status_code == 200
     assert stored.json()["src_ip"] == "10.0.0.5"
 
 
-def test_ingest_generates_id_when_omitted(client):
+def test_ingest_generates_id_when_omitted(client, auth_headers):
     resp = client.post(
         "/ingest/flows",
         headers=VALID_HEADERS,
@@ -67,12 +72,14 @@ def test_ingest_generates_id_when_omitted(client):
     assert resp.status_code == 200
     generated_id = resp.json()["results"][0]["id"]
     assert generated_id  # non-empty, auto-generated
-    stored = client.get(f"/flows/{generated_id}")
+    stored = client.get(f"/flows/{generated_id}", headers=auth_headers)
     assert stored.status_code == 200
 
 
-def test_ingest_broadcasts_flow_over_websocket(client):
-    with client.websocket_connect("/ws/flows") as ws:
+def test_ingest_broadcasts_flow_over_websocket(client, seeded_user):
+    login = client.post("/auth/login", json={"username": "admin", "password": "testpass123"})
+    token = login.json()["access_token"]
+    with client.websocket_connect(f"/ws/flows?token={token}") as ws:
         client.post(
             "/ingest/flows",
             headers=VALID_HEADERS,
@@ -83,7 +90,7 @@ def test_ingest_broadcasts_flow_over_websocket(client):
         assert received["id"] == "flow-b1"
 
 
-def test_ingest_creates_alert_when_confidence_exceeds_threshold(client, monkeypatch):
+def test_ingest_creates_alert_when_confidence_exceeds_threshold(client, monkeypatch, auth_headers):
     monkeypatch.setattr(model_service, "predict_one", lambda features: ("PortScan", 0.95, []))
 
     resp = client.post(
@@ -95,7 +102,7 @@ def test_ingest_creates_alert_when_confidence_exceeds_threshold(client, monkeypa
     assert result["alert_triggered"] is True
     assert result["alert_id"] is not None
 
-    alerts_resp = client.get("/alerts", params={"src_ip": "10.0.0.7"})
+    alerts_resp = client.get("/alerts", params={"src_ip": "10.0.0.7"}, headers=auth_headers)
     assert len(alerts_resp.json()) == 1
     assert alerts_resp.json()[0]["label"] == "PortScan"
 
@@ -113,7 +120,7 @@ def test_ingest_does_not_create_alert_when_benign(client, monkeypatch):
     assert result["alert_id"] is None
 
 
-def test_ingest_repeated_attack_updates_same_alert_not_a_new_one(client, monkeypatch):
+def test_ingest_repeated_attack_updates_same_alert_not_a_new_one(client, monkeypatch, auth_headers):
     monkeypatch.setattr(model_service, "predict_one", lambda features: ("DoS_DDoS", 0.90, []))
 
     client.post(
@@ -128,7 +135,7 @@ def test_ingest_repeated_attack_updates_same_alert_not_a_new_one(client, monkeyp
     )
     alert_id_1 = second.json()["results"][0]["alert_id"]
 
-    alerts_resp = client.get("/alerts", params={"src_ip": "10.0.0.11"})
+    alerts_resp = client.get("/alerts", params={"src_ip": "10.0.0.11"}, headers=auth_headers)
     body = alerts_resp.json()
     assert len(body) == 1
     assert body[0]["id"] == alert_id_1

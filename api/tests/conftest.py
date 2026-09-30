@@ -86,3 +86,21 @@ def client(dummy_model_dir, test_db):
 
     app.dependency_overrides.clear()
     model_service.model = None
+
+
+from api.db import User
+from api.security import hash_password
+
+@pytest.fixture
+def seeded_user(db_session):
+    user = User(username="admin", password_hash=hash_password("testpass123"), role="admin")
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+@pytest.fixture
+def auth_headers(client, seeded_user):
+    resp = client.post("/auth/login", json={"username": "admin", "password": "testpass123"})
+    token = resp.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

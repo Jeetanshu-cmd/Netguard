@@ -151,3 +151,17 @@ class IngestFlowResult(BaseModel):
 
 class IngestResponse(BaseModel):
     results: List[IngestFlowResult]
+
+
+# --- Auth schemas (api/auth) ---
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    role: str

@@ -9,16 +9,20 @@ Every message carries a "type" field so the dashboard can route it:
   {"type": "flow",  ...}   -> one classified flow (live or batch)
   {"type": "alert", ...}   -> a new or updated alert
 
-api/ingest (a later branch) will call broadcast_flow()/broadcast_alert()
-right after it classifies a flow and runs it through the alert engine.
-This module has zero knowledge of inference or the alert engine — it only
-knows how to fan a dict out to whoever is listening.
+Requires a valid JWT passed as a query parameter (browsers can't set custom
+headers during a WebSocket handshake, so the token can't go in an
+Authorization header the way REST routes use it):
+  ws://localhost:8000/ws/flows?token=<JWT>
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
+from sqlalchemy.orm import Session
+
+from api.db import get_db
+from api.security import get_current_user_ws
 
 logger = logging.getLogger("netguard.ws")
 
@@ -68,13 +72,22 @@ class ConnectionManager:
         await self._broadcast({"type": "alert", **alert})
 
 
-# Single shared instance — import THIS from api/ingest later, don't
-# instantiate a second ConnectionManager anywhere.
+# Single shared instance — import THIS from api/ingest, don't instantiate
+# a second ConnectionManager anywhere.
 manager = ConnectionManager()
 
 
 @router.websocket("/ws/flows")
-async def flows_websocket(websocket: WebSocket) -> None:
+async def flows_websocket(
+    websocket: WebSocket,
+    token: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+) -> None:
+    user = get_current_user_ws(token=token, db=db)
+    if user is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await manager.connect(websocket)
     try:
         while True:
