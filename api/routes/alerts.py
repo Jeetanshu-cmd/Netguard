@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from api.db import Alert, get_db
 from api.schemas import AlertResponse
 
-router = APIRouter(tags=["alerts"])
+from api.security import get_current_user
+router = APIRouter(tags=["alerts"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/alerts", response_model=List[AlertResponse])

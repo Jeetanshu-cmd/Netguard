@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from api.db import Flow, get_db
 from api.schemas import FlowResponse
 
-router = APIRouter(tags=["flows"])
+from api.security import get_current_user
+router = APIRouter(tags=["flows"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/flows", response_model=List[FlowResponse])

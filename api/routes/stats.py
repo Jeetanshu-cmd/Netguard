@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from api.db import Flow, get_db
 from api.schemas import StatsResponse
 
-router = APIRouter(tags=["stats"])
+from api.security import get_current_user
+router = APIRouter(tags=["stats"], dependencies=[Depends(get_current_user)])
 
 ATTACK_CLASSES = ["Benign", "DoS_DDoS", "PortScan", "BruteForce"]
 

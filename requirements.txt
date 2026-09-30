@@ -8,7 +8,9 @@ pydantic==2.10.4
 websockets==14.2
 httpx==0.28.1
 requests==2.32.3
-sqlalchemy>=2.0.0
+sqlalchemy>=2.0.
+pyjwt==2.10.1
+bcrypt==4.2.1
 
 # --- ML & Data Processing (ml/) ---
 numpy==2.2.1
