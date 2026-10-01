@@ -1,0 +1,169 @@
+:root {
+  color-scheme: light;
+
+  /* Geist ink/canvas system (DESIGN.md) */
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f2f2f2;
+  --color-border: #ebebeb;
+  --color-border-soft: #f2f2f2;
+  --color-text: #171717;
+  --color-text-muted: #4d4d4d;
+  --color-text-faint: #8f8f8f;
+  --color-text-placeholder: #a1a1a1;
+  --color-accent: #0070f3;
+  --color-accent-hover: #0761d1;
+  --color-accent-soft: #d3e5ff;
+  --color-danger: #ee0000;
+  --color-danger-deep: #c50000;
+  --color-success: #0070f3;
+  --color-warning: #f5a623;
+  --color-warning-soft: #ffefcf;
+  --color-warning-deep: #ab570a;
+
+  /* Semantic flow-label colors, kept distinct from Geist's monochrome
+     chrome since they carry security meaning (Benign/DoS/PortScan/BruteForce). */
+  --color-benign: #0070f3;
+  --color-dos-ddos: #ee0000;
+  --color-portscan: #ab570a;
+  --color-bruteforce: #7928ca;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 100px;
+  --radius-full: 9999px;
+
+  --font-sans: Geist, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 40px;
+
+  font-family: var(--font-sans);
+}
+
+/* Dark theme: same semantic variable names, Geist-style inverted ink/canvas.
+   Toggled via [data-theme] on <html>, set by ThemeContext (localStorage +
+   prefers-color-scheme fallback). Component CSS never references raw colors,
+   so this block is the only place dark mode needs to be defined. */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #0a0a0a;
+  --color-surface: #111111;
+  --color-surface-raised: #1a1a1a;
+  --color-border: #262626;
+  --color-border-soft: #1f1f1f;
+  --color-text: #ededed;
+  --color-text-muted: #b4b4b4;
+  --color-text-faint: #7a7a7a;
+  --color-text-placeholder: #6b6b6b;
+  --color-accent: #3291ff;
+  --color-accent-hover: #62aeff;
+  --color-accent-soft: #163a63;
+  --color-danger: #ff4040;
+  --color-danger-deep: #ff6b6b;
+  --color-success: #3291ff;
+  --color-warning: #f5a623;
+  --color-warning-soft: #3d2e0f;
+  --color-warning-deep: #f7b955;
+
+  --color-benign: #3291ff;
+  --color-dos-ddos: #ff4040;
+  --color-portscan: #f7b955;
+  --color-bruteforce: #a970ff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+img,
+svg {
+  display: block;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Focus visibility: never remove outline without a replacement. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Tabular numbers for any numeric columns (flow tables, stats). */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--color-text);
+  color: var(--color-surface);
+  padding: 0.5rem 1rem;
+  z-index: 100;
+  border-radius: 0 0 var(--radius-sm) 0;
+}
+
+.skip-link:focus-visible {
+  left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
