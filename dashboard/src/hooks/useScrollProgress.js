@@ -78,7 +78,12 @@ export function useScrollProgress(trackRef, { build, deps = [], onProgress } = {
         onRefresh: (self) => emit(self.progress),
       })
       emit(trigger.progress)
-      return undefined
+      // Web fonts change text metrics after first paint; recompute trigger positions once.
+      let alive = true
+      document.fonts?.ready.then(() => alive && ScrollTrigger.refresh())
+      return () => {
+        alive = false
+      }
     },
     { scope: trackRef, dependencies: [reduced, ...deps], revertOnUpdate: true },
   )

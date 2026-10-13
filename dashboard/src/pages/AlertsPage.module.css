@@ -50,6 +50,7 @@
   background: var(--color-surface);
   max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 .segment button {
   border: none;
@@ -63,6 +64,9 @@
   cursor: pointer;
   white-space: nowrap;
   touch-action: manipulation;
+}
+.segment button:hover {
+  color: var(--color-text);
 }
 .segment button[aria-pressed='true'] {
   background: var(--color-surface-raised);

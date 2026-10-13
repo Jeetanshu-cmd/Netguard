@@ -1,6 +1,6 @@
 // Sign-in screen. Left: what NetGuard does and how (all facts from the project
 // README / AGENTS.md). Right: the real login form (POST /auth/login).
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ShieldLogo } from '../components/ShieldLogo.jsx'
 import { useAuth } from '../hooks/useAuth.js'
@@ -34,6 +34,8 @@ export function LoginPage() {
   const { login, isLoading, error } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const usernameRef = useRef(null)
+  const passwordRef = useRef(null)
   const usernameId = useId()
   const passwordId = useId()
 
@@ -46,7 +48,9 @@ export function LoginPage() {
   async function handleSubmit(event) {
     event.preventDefault()
     setSubmitted(true)
-    if (!username || !password) return
+    // Move focus to the first invalid field so keyboard and screen-reader users land on it.
+    if (!username) return usernameRef.current?.focus()
+    if (!password) return passwordRef.current?.focus()
     const ok = await login(username, password)
     if (ok) navigate(from, { replace: true })
   }
@@ -59,7 +63,7 @@ export function LoginPage() {
       <header className={styles.topbar}>
         <div className={styles.brand}>
           <ShieldLogo size={24} className={styles.brandMark} />
-          <span>NetGuard AI</span>
+          <span translate="no">NetGuard AI</span>
         </div>
         <nav className={styles.pillNav} aria-label="Page sections">
           <a href="#how">How it works</a>
@@ -96,6 +100,8 @@ export function LoginPage() {
               <label htmlFor={usernameId}>Username</label>
               <input
                 id={usernameId}
+                ref={usernameRef}
+                placeholder="e.g. admin…"
                 name="username"
                 type="text"
                 autoComplete="username"
@@ -114,6 +120,8 @@ export function LoginPage() {
               <label htmlFor={passwordId}>Password</label>
               <input
                 id={passwordId}
+                ref={passwordRef}
+                placeholder="Your password…"
                 name="password"
                 type="password"
                 autoComplete="current-password"
@@ -146,7 +154,6 @@ export function LoginPage() {
         </section>
 
         <section id="how" className={styles.section} aria-labelledby="how-h">
-          <p className={styles.eyebrow}>The pipeline</p>
           <h2 id="how-h" className={styles.h2}>From raw packet to alert.</h2>
           <ol className={styles.steps}>
             {STEPS.map((s, i) => (
@@ -161,7 +168,6 @@ export function LoginPage() {
         </section>
 
         <section id="detect" className={styles.section} aria-labelledby="detect-h">
-          <p className={styles.eyebrow}>Detection classes</p>
           <h2 id="detect-h" className={styles.h2}>Four labels, each with a fingerprint.</h2>
           <ul className={styles.classes}>
             {CLASSES.map((c) => (
@@ -175,7 +181,6 @@ export function LoginPage() {
         </section>
 
         <section id="stack" className={styles.section} aria-labelledby="stack-h">
-          <p className={styles.eyebrow}>Under the hood</p>
           <h2 id="stack-h" className={styles.h2}>Small, readable, Python-first.</h2>
           <ul className={styles.stack}>
             {STACK.map((s) => (

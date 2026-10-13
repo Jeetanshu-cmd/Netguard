@@ -25,6 +25,7 @@ export function OverviewPage() {
 
   return (
     <div ref={rootRef} className={styles.nd}>
+      <h1 className="visually-hidden">Overview</h1>
       <LiveDataProvider>
         <PacketTrace />
         <StoryPanels />

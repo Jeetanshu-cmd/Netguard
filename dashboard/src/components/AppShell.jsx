@@ -24,7 +24,7 @@ export function AppShell() {
       <header className={styles.header}>
         <div className={styles.brand}>
           <ShieldLogo className={styles.brandMark} size={24} />
-          <span>NetGuard AI</span>
+          <span translate="no">NetGuard AI</span>
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">

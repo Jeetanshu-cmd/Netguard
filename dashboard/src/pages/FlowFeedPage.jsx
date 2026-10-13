@@ -3,6 +3,7 @@
 // stays bounded; handlers use functional setState so the socket callback is
 // registered once.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { useFlowSocket } from '../hooks/useFlowSocket.js'
@@ -39,7 +40,10 @@ function Stat({ label, value, tone }) {
 export function FlowFeedPage() {
   const { token } = useAuth()
   const [flows, setFlows] = useState([])
-  const [threatsOnly, setThreatsOnly] = useState(false)
+  // Filter lives in the URL (?show=threats) so it survives reloads and can be shared.
+  const [params, setParams] = useSearchParams()
+  const threatsOnly = params.get('show') === 'threats'
+  const setThreatsOnly = (on) => setParams(on ? { show: 'threats' } : {}, { replace: true })
   const [rate, setRate] = useState(0)
   const arrivals = useRef([])
 
@@ -91,7 +95,6 @@ export function FlowFeedPage() {
     <section aria-labelledby="flow-feed-heading">
       <PageHeader
         id="flow-feed-heading"
-        eyebrow="Live flow"
         title="Every flow, as it is classified."
         description={`Each row is one network conversation with the label and confidence the model gave it. Rows highlighted in red are non-Benign above ${ALERT_THRESHOLD} confidence, the level that raises an alert.`}
       >
@@ -152,8 +155,8 @@ export function FlowFeedPage() {
                 return (
                   <tr key={flow.id} className={rowClass}>
                     <td className={`${styles.mono} tabular-nums`}>{formatTime(flow.timestamp)}</td>
-                    <td className={styles.mono}>{flow.src_ip ?? '—'}</td>
-                    <td className={styles.mono}>{dest ?? '—'}</td>
+                    <td className={styles.mono} translate="no">{flow.src_ip ?? '—'}</td>
+                    <td className={styles.mono} translate="no">{dest ?? '—'}</td>
                     <td>
                       <LabelBadge label={flow.label} />
                     </td>

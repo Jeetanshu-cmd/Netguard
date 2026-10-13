@@ -183,7 +183,6 @@
 }
 .cluster {
   fill-opacity: 0.85;
-  transition: r 0.4s ease;
 }
 .ring {
   fill: none;

@@ -6,7 +6,7 @@ export function PageHeader({ id, eyebrow, title, description, children }) {
   return (
     <header className={styles.header}>
       <div className={styles.text}>
-        <p className={styles.eyebrow}>{eyebrow}</p>
+        {eyebrow && <p className={styles.eyebrow}>{eyebrow}</p>}
         <h1 id={id} className={styles.title}>{title}</h1>
         {description && <p className={styles.description}>{description}</p>}
       </div>

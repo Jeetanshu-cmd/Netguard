@@ -116,6 +116,7 @@ a {
 
 button {
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Focus visibility: never remove outline without a replacement. */

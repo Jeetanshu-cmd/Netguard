@@ -4,6 +4,7 @@
 // stored count instead of incrementing. Only Admins see Acknowledge
 // (PATCH /alerts/{id}); the API enforces that too.
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { useFlowSocket } from '../hooks/useFlowSocket.js'
@@ -71,7 +72,11 @@ export function AlertsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [actionError, setActionError] = useState(null)
-  const [tab, setTab] = useState('open')
+  // Tab lives in the URL (?tab=closed|all) so it survives reloads and can be shared.
+  const [params, setParams] = useSearchParams()
+  const tabParam = params.get('tab')
+  const tab = tabParam === 'closed' || tabParam === 'all' ? tabParam : 'open'
+  const setTab = (key) => setParams(key === 'open' ? {} : { tab: key }, { replace: true })
 
   useEffect(() => {
     let cancelled = false
@@ -123,7 +128,6 @@ export function AlertsPage() {
     <section aria-labelledby="alerts-heading">
       <PageHeader
         id="alerts-heading"
-        eyebrow="Alerts"
         title="One alert per attacker."
         description={`A flow raises an alert only when it is non-Benign and above ${ALERT_THRESHOLD} confidence. Repeats from the same source IP and label inside the de-dup window update the same alert, so an attack shows up building, not as thousands of popups.`}
       >
@@ -180,7 +184,7 @@ export function AlertsPage() {
                 <span className={`${styles.stripe} ${STRIPE[alert.label] ?? ''}`} aria-hidden="true" />
                 <div className={styles.identity}>
                   <LabelBadge label={alert.label} />
-                  <span className={styles.ip}>{alert.src_ip}</span>
+                  <span className={styles.ip} translate="no">{alert.src_ip}</span>
                   <span className={styles.count}>
                     ×{(alert.flow_count ?? 0).toLocaleString('en-US')} flow{alert.flow_count === 1 ? '' : 's'}
                   </span>
