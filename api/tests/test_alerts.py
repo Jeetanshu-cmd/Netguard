@@ -83,3 +83,27 @@ def test_get_alerts_filter_by_ip_and_label(client, db_session, auth_headers):
     resp = client.get("/alerts?label=PortScan", headers=auth_headers)
     assert resp.status_code == 200
     assert len(resp.json()) == 2
+
+def _make_alert(db_session):
+    db_session.add(Alert(id=7, first_seen=1.0, last_seen=2.0, src_ip="10.0.0.4",
+                         label="PortScan", max_confidence=0.97, flow_count=3, status="open"))
+    db_session.commit()
+
+
+def test_patch_alert_requires_admin(client, db_session, auth_headers):
+    _make_alert(db_session)
+    assert client.patch("/alerts/7", json={"status": "acknowledged"}).status_code == 401
+
+
+def test_patch_alert_acknowledges(client, db_session, auth_headers):
+    _make_alert(db_session)
+    resp = client.patch("/alerts/7", json={"status": "acknowledged"}, headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "acknowledged"
+    assert client.get("/alerts/7", headers=auth_headers).json()["status"] == "acknowledged"
+
+
+def test_patch_alert_rejects_bad_status_and_missing(client, db_session, auth_headers):
+    _make_alert(db_session)
+    assert client.patch("/alerts/7", json={"status": "nope"}, headers=auth_headers).status_code == 422
+    assert client.patch("/alerts/99", json={"status": "resolved"}, headers=auth_headers).status_code == 404
