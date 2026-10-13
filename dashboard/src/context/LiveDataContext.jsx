@@ -19,7 +19,7 @@ import {
   seedFlows,
   snapshot,
 } from '../utils/liveStore.js'
-import { ALERT_THRESHOLD } from '../utils/constants.js'
+import { ALERT_THRESHOLD, USE_MOCKS } from '../utils/constants.js'
 import { LiveDataContext } from './liveDataContextDefinition.js'
 
 const POLL_MS = 15000
@@ -47,11 +47,12 @@ export function LiveDataProvider({ children }) {
   const capture = useRef({ data: null, unavailable: false })
   const meta = useRef({ model: null, threshold: ALERT_THRESHOLD, apiError: null })
 
-  const [simulate, setSimulate] = useState(false)
-  const simulateRef = useRef(false)
+  // With the mock backend there is no real data, so start in the labelled SIM view.
+  const [simulate, setSimulate] = useState(USE_MOCKS)
+  const simulateRef = useRef(USE_MOCKS)
   const [view, setView] = useState(() => ({
     ...snapshot(createSlice()),
-    mode: 'live',
+    mode: USE_MOCKS ? 'sim' : 'live',
     sensor: { state: 'unknown', source: 'derived' },
     model: null,
     threshold: ALERT_THRESHOLD,

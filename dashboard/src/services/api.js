@@ -88,7 +88,8 @@ export const api = {
 
   async getModelInfo() {
     if (USE_MOCKS) {
-      return { model_type: 'RandomForestClassifier', alert_threshold: 0.85 }
+      // No real model behind the mock backend, so don't claim one (stat shows "—").
+      return { model_type: null, alert_threshold: 0.85 }
     }
     return request('/model-info', { auth: false })
   },
