@@ -2,7 +2,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-xxs);
-  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
   font-weight: 500;
   padding: var(--space-xxs) var(--space-sm);
   border-radius: var(--radius-full);
@@ -19,9 +21,9 @@
 }
 
 .live {
-  color: var(--color-accent);
-  border-color: var(--color-accent-soft);
-  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface));
+  color: var(--color-success);
+  border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-success) 7%, var(--color-surface));
 }
 
 .live .dot {

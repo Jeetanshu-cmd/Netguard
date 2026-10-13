@@ -23,7 +23,7 @@ export function AppShell() {
 
       <header className={styles.header}>
         <div className={styles.brand}>
-          <ShieldLogo className={styles.brandMark} size={22} />
+          <ShieldLogo className={styles.brandMark} size={24} />
           <span>NetGuard AI</span>
         </div>
 
@@ -44,7 +44,7 @@ export function AppShell() {
           <HealthIndicator />
           <ThemeToggle />
           <button type="button" className={styles.logoutButton} onClick={logout}>
-            Log Out
+            Log out
           </button>
         </div>
       </header>

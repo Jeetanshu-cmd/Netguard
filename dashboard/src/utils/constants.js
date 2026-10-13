@@ -4,10 +4,10 @@
 export const LABELS = ['Benign', 'DoS_DDoS', 'PortScan', 'BruteForce']
 
 export const LABEL_COLORS = {
-  Benign: '#0070f3',
-  DoS_DDoS: '#ee0000',
-  PortScan: '#ab570a',
-  BruteForce: '#7928ca',
+  Benign: '#22c55e',
+  DoS_DDoS: '#ef4444',
+  PortScan: '#f59e0b',
+  BruteForce: '#7b93ff',
 }
 
 export const ALERT_THRESHOLD = 0.85
