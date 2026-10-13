@@ -7,6 +7,7 @@ import styles from './AppShell.module.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Live Feed' },
+  { to: '/overview', label: 'Overview' },
   { to: '/alerts', label: 'Alerts' },
   { to: '/stats', label: 'Stats' },
 ]

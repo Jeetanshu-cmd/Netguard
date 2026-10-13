@@ -10,6 +10,8 @@ import { LoginPage } from './pages/LoginPage.jsx'
 import { FlowFeedPage } from './pages/FlowFeedPage.jsx'
 import { AlertsPage } from './pages/AlertsPage.jsx'
 
+// Overview pulls in GSAP + ScrollTrigger, so it is lazy-loaded too.
+const OverviewPage = lazy(() => import('./pages/OverviewPage.jsx').then((m) => ({ default: m.OverviewPage })))
 const StatsPage = lazy(() => import('./pages/StatsPage.jsx').then((m) => ({ default: m.StatsPage })))
 
 function App() {
@@ -27,6 +29,14 @@ function App() {
       >
         <Route index element={<FlowFeedPage />} />
         <Route path="alerts" element={<AlertsPage />} />
+        <Route
+          path="overview"
+          element={
+            <Suspense fallback={<p>Loading overview…</p>}>
+              <OverviewPage />
+            </Suspense>
+          }
+        />
         <Route
           path="stats"
           element={

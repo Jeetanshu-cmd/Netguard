@@ -87,7 +87,9 @@
 html,
 body {
   margin: 0;
-  overflow-x: hidden;
+  /* `clip` (not `hidden`): hidden turns <body> into a scroll container and
+     breaks position: sticky for the Overview page's pinned stages. */
+  overflow-x: clip;
 }
 
 body {
