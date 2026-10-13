@@ -1,32 +1,32 @@
 :root {
   color-scheme: light;
 
-  /* Geist ink/canvas system (DESIGN.md) */
-  --color-bg: #fafafa;
+  /* Light theme (secondary). The product is dark-first: see [data-theme='dark'] below. */
+  --color-bg: #f6f7f9;
   --color-surface: #ffffff;
-  --color-surface-raised: #f2f2f2;
-  --color-border: #ebebeb;
-  --color-border-soft: #f2f2f2;
-  --color-text: #171717;
-  --color-text-muted: #4d4d4d;
-  --color-text-faint: #8f8f8f;
-  --color-text-placeholder: #a1a1a1;
-  --color-accent: #0070f3;
-  --color-accent-hover: #0761d1;
-  --color-accent-soft: #d3e5ff;
-  --color-danger: #ee0000;
-  --color-danger-deep: #c50000;
-  --color-success: #0070f3;
-  --color-warning: #f5a623;
-  --color-warning-soft: #ffefcf;
-  --color-warning-deep: #ab570a;
+  --color-surface-raised: #eef0f4;
+  --color-border: #e1e4ea;
+  --color-border-soft: #eceef2;
+  --color-text: #0b0d11;
+  --color-text-muted: #4b5260;
+  --color-text-faint: #6b7280;
+  --color-text-placeholder: #9aa1ad;
+  --color-accent: #2f49e0;
+  --color-accent-hover: #2339c0;
+  --color-accent-soft: #d9e0ff;
+  --color-accent-solid: #3b5bff;
+  --color-danger: #dc2626;
+  --color-danger-deep: #b91c1c;
+  --color-success: #15803d;
+  --color-warning: #d97706;
+  --color-warning-soft: #fdf0d5;
+  --color-warning-deep: #92400e;
 
-  /* Semantic flow-label colors, kept distinct from Geist's monochrome
-     chrome since they carry security meaning (Benign/DoS/PortScan/BruteForce). */
-  --color-benign: #0070f3;
-  --color-dos-ddos: #ee0000;
-  --color-portscan: #ab570a;
-  --color-bruteforce: #7928ca;
+  /* Semantic flow-label colors (security meaning, not decoration). */
+  --color-benign: #16a34a;
+  --color-dos-ddos: #dc2626;
+  --color-portscan: #d97706;
+  --color-bruteforce: #3b5bff;
 
   --radius-sm: 6px;
   --radius-md: 12px;
@@ -34,8 +34,8 @@
   --radius-pill: 100px;
   --radius-full: 9999px;
 
-  --font-sans: Geist, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --space-xxs: 4px;
   --space-xs: 8px;
@@ -48,36 +48,37 @@
   font-family: var(--font-sans);
 }
 
-/* Dark theme: same semantic variable names, Geist-style inverted ink/canvas.
-   Toggled via [data-theme] on <html>, set by ThemeContext (localStorage +
-   prefers-color-scheme fallback). Component CSS never references raw colors,
-   so this block is the only place dark mode needs to be defined. */
+/* Dark theme (default). Palette sampled from the reference design:
+   ink #0b0d11, panel #101216, hairline ~8% white, blue #3b5bff, green #22c55e.
+   Toggled via [data-theme] on <html>, set by ThemeContext. Component CSS only
+   uses these variables, so this block is the only place dark mode is defined. */
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --color-bg: #0a0a0a;
-  --color-surface: #111111;
-  --color-surface-raised: #1a1a1a;
-  --color-border: #262626;
-  --color-border-soft: #1f1f1f;
-  --color-text: #ededed;
-  --color-text-muted: #b4b4b4;
-  --color-text-faint: #7a7a7a;
-  --color-text-placeholder: #6b6b6b;
-  --color-accent: #3291ff;
-  --color-accent-hover: #62aeff;
-  --color-accent-soft: #163a63;
-  --color-danger: #ff4040;
-  --color-danger-deep: #ff6b6b;
-  --color-success: #3291ff;
-  --color-warning: #f5a623;
-  --color-warning-soft: #3d2e0f;
-  --color-warning-deep: #f7b955;
+  --color-bg: #0b0d11;
+  --color-surface: #101216;
+  --color-surface-raised: #161a21;
+  --color-border: #1f2329;
+  --color-border-soft: #171a1f;
+  --color-text: #ecedf0;
+  --color-text-muted: #9aa1ad;
+  --color-text-faint: #6b7280;
+  --color-text-placeholder: #555c68;
+  --color-accent: #7b93ff; /* accent lightened for text contrast on ink */
+  --color-accent-hover: #9fb0ff;
+  --color-accent-soft: #1a2457;
+  --color-accent-solid: #3b5bff;
+  --color-danger: #ef4444;
+  --color-danger-deep: #f87171;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-warning-soft: #33260c;
+  --color-warning-deep: #fbbf24;
 
-  --color-benign: #3291ff;
-  --color-dos-ddos: #ff4040;
-  --color-portscan: #f7b955;
-  --color-bruteforce: #a970ff;
+  --color-benign: #22c55e;
+  --color-dos-ddos: #ef4444;
+  --color-portscan: #f59e0b;
+  --color-bruteforce: #7b93ff;
 }
 
 * {
@@ -87,7 +88,9 @@
 html,
 body {
   margin: 0;
-  overflow-x: hidden;
+  /* `clip` (not `hidden`): hidden turns <body> into a scroll container and
+     breaks position: sticky for the Overview page's pinned stages. */
+  overflow-x: clip;
 }
 
 body {
@@ -113,6 +116,7 @@ a {
 
 button {
   font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Focus visibility: never remove outline without a replacement. */

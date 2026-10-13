@@ -1,0 +1,135 @@
+.track {
+  height: 300vh;
+  height: 300svh;
+  position: relative;
+}
+.trackStatic {
+  position: relative;
+}
+
+.stage,
+.stageStatic {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--nd-hairline);
+}
+.stage {
+  position: sticky;
+  top: var(--nd-sticky-top, 0px);
+  height: calc(100vh - var(--nd-sticky-top, 0px));
+  height: calc(100svh - var(--nd-sticky-top, 0px));
+}
+.stageStatic {
+  min-height: 70vh;
+  padding: 48px 0;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--nd-hairline);
+}
+.barFill {
+  height: 100%;
+  background: var(--nd-accent);
+  transform-origin: left;
+  will-change: transform;
+}
+
+.counter {
+  position: absolute;
+  top: 16px;
+  right: clamp(16px, 4vw, 40px);
+  margin: 0;
+  font: 500 11px / 1 var(--nd-mono);
+  letter-spacing: 0.16em;
+  color: var(--nd-muted);
+}
+
+.panels {
+  position: relative;
+  height: 100%;
+  padding: 0 clamp(16px, 4vw, 40px);
+  display: grid;
+  align-items: center;
+}
+.stageStatic .panels {
+  gap: 64px;
+}
+
+.panel,
+.panelOn {
+  grid-area: 1 / 1;
+  max-width: 34rem;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.panel {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+.stageStatic .panel,
+.stageStatic .panelOn {
+  grid-area: auto;
+}
+
+.title {
+  margin: 0 0 12px;
+  font: 500 clamp(2rem, 7vw, 3.5rem) / 1.05 var(--nd-sans);
+  letter-spacing: -0.035em;
+  color: var(--nd-text);
+}
+.body {
+  margin: 0;
+  font: 400 1rem / 1.55 var(--nd-sans);
+  color: var(--nd-muted-text);
+}
+
+.numbers {
+  display: flex;
+  gap: clamp(24px, 6vw, 56px);
+  margin: 28px 0 0;
+}
+.numbers dt {
+  font: 500 10px / 1 var(--nd-mono);
+  letter-spacing: 0.14em;
+  color: var(--nd-muted);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.numbers dd {
+  margin: 8px 0 0;
+  font: 500 clamp(2rem, 8vw, 3.25rem) / 1 var(--nd-mono);
+  color: var(--nd-text);
+  min-width: 4ch;
+}
+.live,
+.sim {
+  font-size: 9px;
+  padding: 3px 5px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+}
+.live {
+  color: var(--nd-green);
+}
+.sim {
+  color: var(--nd-amber);
+}
+
+@media (min-width: 768px) {
+  .panels {
+    padding-left: clamp(24px, 6vw, 80px);
+  }
+}

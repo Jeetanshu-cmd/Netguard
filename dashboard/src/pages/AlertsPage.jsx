@@ -1,70 +1,96 @@
-// Alerts panel. Loads existing alerts via REST (/alerts) on mount, then
-// keeps them live via WS "alert" messages merged in by (src_ip, label) —
-// matching the backend's own de-dup key (AGENTS.md §5 / README §8).
-// A dedicated useFlowSocket connection is used here so this page can be
-// visited independently of the Live Feed page and still see alert pushes.
-import { useCallback, useEffect, useState } from 'react'
+// Alerts: aggregated per source IP and label (the backend's own de-dup key,
+// AGENTS.md §5 / README §8). Loads GET /alerts, then merges WS "alert" events by
+// id. A WS alert's flow_count is already the running total, so it replaces the
+// stored count instead of incrementing. Only Admins see Acknowledge
+// (PATCH /alerts/{id}); the API enforces that too.
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api.js'
 import { useAuth } from '../hooks/useAuth.js'
 import { useFlowSocket } from '../hooks/useFlowSocket.js'
 import { LabelBadge } from '../components/LabelBadge.jsx'
 import { ConnectionStatus } from '../components/ConnectionStatus.jsx'
+import { PageHeader } from '../components/PageHeader.jsx'
+import { ALERT_THRESHOLD } from '../utils/constants.js'
 import styles from './AlertsPage.module.css'
 
-function alertKey(alert) {
-  return `${alert.src_ip}::${alert.label}`
+const STRIPE = {
+  DoS_DDoS: styles.stripeDos,
+  PortScan: styles.stripePort,
+  BruteForce: styles.stripeBrute,
 }
+
+const isClosed = (a) => a.status === 'acknowledged' || a.status === 'resolved'
 
 function mergeAlert(current, incoming) {
-  const key = alertKey(incoming)
-  const existingIndex = current.findIndex((a) => alertKey(a) === key)
-
-  if (existingIndex === -1) {
-    return [{ ...incoming, flow_count: incoming.flow_count ?? 1 }, ...current]
+  const next = {
+    id: incoming.id,
+    src_ip: incoming.src_ip,
+    label: incoming.label,
+    max_confidence: incoming.max_confidence ?? incoming.confidence,
+    flow_count: incoming.flow_count ?? 1,
+    status: incoming.status ?? 'open',
+    first_seen: incoming.first_seen ?? incoming.timestamp,
+    last_seen: incoming.last_seen ?? incoming.timestamp,
   }
-
-  const next = [...current]
-  const existing = next[existingIndex]
-  next[existingIndex] = {
-    ...existing,
-    ...incoming,
-    flow_count: (existing.flow_count ?? 1) + 1,
-    first_seen: existing.first_seen ?? incoming.first_seen,
-    last_seen: incoming.last_seen ?? incoming.timestamp ?? existing.last_seen,
+  const i = current.findIndex((a) => a.id === next.id)
+  if (i === -1) return [next, ...current]
+  const prev = current[i]
+  const merged = [...current]
+  merged[i] = {
+    ...prev,
+    ...next,
+    max_confidence: Math.max(prev.max_confidence ?? 0, next.max_confidence ?? 0),
+    first_seen: prev.first_seen ?? next.first_seen,
   }
-  return next
+  return merged
 }
 
-function formatTime(unixSeconds) {
-  if (!unixSeconds) return '—'
-  return new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }).format(new Date(unixSeconds * 1000))
+const clock = (s) => (s ? new Date(s * 1000).toLocaleTimeString([], { hour12: false }) : '—')
+
+function span(first, last) {
+  if (!first || !last) return '—'
+  const s = Math.max(0, Math.round(last - first))
+  if (s < 60) return `${s}s`
+  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`
+}
+
+function Stat({ label, value, tone }) {
+  return (
+    <div className={styles.stat}>
+      <span className={styles.statLabel}>{label}</span>
+      <span className={`${styles.statValue} ${tone ?? ''} tabular-nums`}>{value}</span>
+    </div>
+  )
 }
 
 export function AlertsPage() {
-  const { token } = useAuth()
+  const { token, role } = useAuth()
+  const isAdmin = String(role ?? '').toLowerCase() === 'admin'
   const [alerts, setAlerts] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const [actionError, setActionError] = useState(null)
+  // Tab lives in the URL (?tab=closed|all) so it survives reloads and can be shared.
+  const [params, setParams] = useSearchParams()
+  const tabParam = params.get('tab')
+  const tab = tabParam === 'closed' || tabParam === 'all' ? tabParam : 'open'
+  const setTab = (key) => setParams(key === 'open' ? {} : { tab: key }, { replace: true })
 
   useEffect(() => {
     let cancelled = false
-    async function load() {
-      setIsLoading(true)
-      setLoadError(null)
-      try {
-        const { alerts: initial } = await api.getAlerts()
+    api
+      .getAlerts({ limit: 100 })
+      .then(({ alerts: initial = [] }) => {
         if (!cancelled) setAlerts(initial)
-      } catch (err) {
+      })
+      .catch((err) => {
         if (!cancelled) setLoadError(err.message ?? 'Failed to load alerts')
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) setIsLoading(false)
-      }
-    }
-    load()
+      })
     return () => {
       cancelled = true
     }
@@ -77,88 +103,128 @@ export function AlertsPage() {
   const { status } = useFlowSocket(token, { onAlert: handleAlert })
 
   const handleAcknowledge = useCallback(async (id) => {
+    setActionError(null)
     setAlerts((current) => current.map((a) => (a.id === id ? { ...a, status: 'acknowledged' } : a)))
     try {
       await api.acknowledgeAlert(id, 'acknowledged')
-    } catch {
-      // Revert on failure so the UI doesn't lie about state.
+    } catch (err) {
+      // Revert so the UI never claims something the server refused.
       setAlerts((current) => current.map((a) => (a.id === id ? { ...a, status: 'open' } : a)))
+      setActionError(err.message ?? 'Could not acknowledge the alert.')
     }
   }, [])
 
-  const openAlerts = alerts.filter((a) => a.status !== 'acknowledged' && a.status !== 'resolved')
-  const resolvedAlerts = alerts.filter((a) => a.status === 'acknowledged' || a.status === 'resolved')
+  const sorted = useMemo(
+    () => [...alerts].sort((a, b) => (b.last_seen ?? 0) - (a.last_seen ?? 0)),
+    [alerts],
+  )
+  const open = sorted.filter((a) => !isClosed(a))
+  const closed = sorted.filter(isClosed)
+  const shown = tab === 'open' ? open : tab === 'closed' ? closed : sorted
+  const topConf = alerts.reduce((m, a) => Math.max(m, a.max_confidence ?? 0), 0)
+  const flowsInAlerts = alerts.reduce((n, a) => n + (a.flow_count ?? 0), 0)
 
   return (
     <section aria-labelledby="alerts-heading">
-      <div className={styles.headerRow}>
-        <h1 id="alerts-heading" className={styles.heading}>
-          Alerts
-        </h1>
+      <PageHeader
+        id="alerts-heading"
+        title="One alert per attacker."
+        description={`A flow raises an alert only when it is non-Benign and above ${ALERT_THRESHOLD} confidence. Repeats from the same source IP and label inside the de-dup window update the same alert, so an attack shows up building, not as thousands of popups.`}
+      >
         <ConnectionStatus status={status} />
+      </PageHeader>
+
+      <div className={styles.toolbar}>
+        <div className={styles.stats}>
+          <Stat label="Open" value={open.length} tone={open.length ? styles.bad : undefined} />
+          <Stat label="Acknowledged" value={closed.length} />
+          <Stat label="Flows covered" value={flowsInAlerts.toLocaleString('en-US')} />
+          <Stat label="Top confidence" value={alerts.length ? topConf.toFixed(2) : '—'} />
+        </div>
+        <div className={styles.segment} role="group" aria-label="Filter alerts">
+          {[
+            ['open', `Open ${open.length}`],
+            ['closed', `Acknowledged ${closed.length}`],
+            ['all', 'All'],
+          ].map(([key, text]) => (
+            <button key={key} type="button" aria-pressed={tab === key} onClick={() => setTab(key)}>
+              {text}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <p className={styles.description}>
-        Aggregated per source IP and label. New detections above the {(0.85 * 100).toFixed(0)}%
-        confidence threshold raise or update an alert here in real time.
-      </p>
-
-      {isLoading && <p className={styles.description}>Loading alerts…</p>}
-
-      {loadError && (
-        <p className={styles.formError} role="alert">
-          {loadError}
+      {!isAdmin && (
+        <p className={styles.note}>
+          You are signed in as a viewer. Alerts are read-only; an admin can acknowledge them.
         </p>
       )}
+      {loadError && <p className={styles.error} role="alert">{loadError}</p>}
+      {actionError && <p className={styles.error} role="alert">{actionError}</p>}
+      {isLoading && <p className={styles.note}>Loading alerts…</p>}
 
-      {!isLoading && openAlerts.length === 0 && !loadError && (
-        <div className={styles.emptyState}>No active alerts. All clear.</div>
+      {!isLoading && shown.length === 0 && !loadError && (
+        <div className={styles.emptyState}>
+          <p className={styles.emptyTitle}>{tab === 'open' ? 'All clear' : 'Nothing here'}</p>
+          <p className={styles.emptyText}>
+            {tab === 'open'
+              ? 'No open alerts. New ones appear here the moment a flow crosses the threshold.'
+              : 'No alerts match this filter yet.'}
+          </p>
+        </div>
       )}
 
-      {openAlerts.length > 0 && (
-        <ul className={styles.alertList}>
-          {openAlerts.map((alert) => (
-            <li key={alert.id} className={styles.alertCard}>
-              <div className={styles.alertMain}>
-                <LabelBadge label={alert.label} />
-                <span className={styles.mono}>{alert.src_ip}</span>
-                <span className={styles.count}>
-                  {alert.flow_count} flow{alert.flow_count === 1 ? '' : 's'}
-                </span>
-              </div>
-              <div className={styles.alertMeta}>
-                <span>First seen {formatTime(alert.first_seen)}</span>
-                <span>Last seen {formatTime(alert.last_seen)}</span>
-                <span className="tabular-nums">
-                  Max confidence {(alert.max_confidence * 100).toFixed(1)}%
-                </span>
-              </div>
-              <button
-                type="button"
-                className={styles.ackButton}
-                onClick={() => handleAcknowledge(alert.id)}
-              >
-                Acknowledge
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {resolvedAlerts.length > 0 && (
-        <details className={styles.resolvedGroup}>
-          <summary>Acknowledged ({resolvedAlerts.length})</summary>
-          <ul className={styles.alertList}>
-            {resolvedAlerts.map((alert) => (
-              <li key={alert.id} className={`${styles.alertCard} ${styles.alertCardMuted}`}>
-                <div className={styles.alertMain}>
+      {shown.length > 0 && (
+        <ul className={styles.list}>
+          {shown.map((alert) => {
+            const conf = alert.max_confidence ?? 0
+            const closedNow = isClosed(alert)
+            return (
+              <li key={alert.id} className={`${styles.card} ${closedNow ? styles.cardClosed : ''}`}>
+                <span className={`${styles.stripe} ${STRIPE[alert.label] ?? ''}`} aria-hidden="true" />
+                <div className={styles.identity}>
                   <LabelBadge label={alert.label} />
-                  <span className={styles.mono}>{alert.src_ip}</span>
+                  <span className={styles.ip} translate="no">{alert.src_ip}</span>
+                  <span className={styles.count}>
+                    ×{(alert.flow_count ?? 0).toLocaleString('en-US')} flow{alert.flow_count === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <dl className={styles.meta}>
+                  <div>
+                    <dt>First seen</dt>
+                    <dd className="tabular-nums">{clock(alert.first_seen)}</dd>
+                  </div>
+                  <div>
+                    <dt>Last seen</dt>
+                    <dd className="tabular-nums">{clock(alert.last_seen)}</dd>
+                  </div>
+                  <div>
+                    <dt>Active for</dt>
+                    <dd className="tabular-nums">{span(alert.first_seen, alert.last_seen)}</dd>
+                  </div>
+                </dl>
+                <div className={styles.conf}>
+                  <span className={styles.confValue}>{conf.toFixed(2)}</span>
+                  <span className={styles.confTrack} aria-hidden="true">
+                    <span className={styles.confFill} style={{ width: `${Math.round(conf * 100)}%` }} />
+                  </span>
+                  <span className={styles.confLabel}>max confidence</span>
+                </div>
+                <div className={styles.action}>
+                  {closedNow ? (
+                    <span className={styles.done}>Acknowledged</span>
+                  ) : isAdmin ? (
+                    <button type="button" className={styles.ack} onClick={() => handleAcknowledge(alert.id)}>
+                      Acknowledge
+                    </button>
+                  ) : (
+                    <span className={styles.openTag}>Open</span>
+                  )}
                 </div>
               </li>
-            ))}
-          </ul>
-        </details>
+            )
+          })}
+        </ul>
       )}
     </section>
   )

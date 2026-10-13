@@ -6,9 +6,12 @@ Docs at: http://localhost:8000/docs
 
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from pathlib import Path
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from api.config import settings
+from api.config import REPO_ROOT, settings
 from api.inference import model_service
 from api.db import init_db
 from api.routes import alerts, auth, flows, predict, stats, system
@@ -50,5 +53,34 @@ app.include_router(ws.router)
 app.include_router(ingest.router)
 app.include_router(auth.router)
 
-# Added in a later branch:
-#   api/auth  -> auth.router
+
+# --- Dashboard (README §9: in production FastAPI serves dashboard/dist) ------
+# One port, one origin: no CORS and no hardcoded host, so the dashboard works
+# from any device that can reach this server. SPA routes such as /alerts and
+# /stats share a path with API routes, so browser page loads (Accept:
+# text/html) get index.html and everything else (fetch, WebSocket) reaches the
+# API untouched.
+DASHBOARD_DIST = Path(REPO_ROOT / "dashboard" / "dist")
+_API_DOC_PATHS = ("/docs", "/redoc", "/openapi.json", "/ws")
+
+if (DASHBOARD_DIST / "index.html").is_file():
+    app.mount("/assets", StaticFiles(directory=DASHBOARD_DIST / "assets"), name="dashboard-assets")
+
+    @app.middleware("http")
+    async def serve_dashboard_pages(request: Request, call_next):
+        path = request.url.path
+        if (
+            request.method == "GET"
+            and "text/html" in request.headers.get("accept", "")
+            and not path.startswith(_API_DOC_PATHS)
+        ):
+            return FileResponse(DASHBOARD_DIST / "index.html")
+        return await call_next(request)
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def dashboard_file(path: str):
+        """Root-level build files (favicon, etc.); anything else is a real 404."""
+        file = (DASHBOARD_DIST / path).resolve()
+        if path and file.is_file() and DASHBOARD_DIST.resolve() in file.parents:
+            return FileResponse(file)
+        raise HTTPException(status_code=404, detail="Not Found")

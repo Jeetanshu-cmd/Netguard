@@ -7,6 +7,7 @@ import styles from './AppShell.module.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Live Feed' },
+  { to: '/overview', label: 'Overview' },
   { to: '/alerts', label: 'Alerts' },
   { to: '/stats', label: 'Stats' },
 ]
@@ -22,8 +23,8 @@ export function AppShell() {
 
       <header className={styles.header}>
         <div className={styles.brand}>
-          <ShieldLogo className={styles.brandMark} size={22} />
-          <span>NetGuard AI</span>
+          <ShieldLogo className={styles.brandMark} size={24} />
+          <span translate="no">NetGuard AI</span>
         </div>
 
         <nav className={styles.nav} aria-label="Main navigation">
@@ -43,7 +44,7 @@ export function AppShell() {
           <HealthIndicator />
           <ThemeToggle />
           <button type="button" className={styles.logoutButton} onClick={logout}>
-            Log Out
+            Log out
           </button>
         </div>
       </header>

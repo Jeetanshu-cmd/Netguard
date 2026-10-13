@@ -1,0 +1,25 @@
+/* Design tokens for the Overview page. Scoped here so the rest of the app
+   keeps its own light/dark theme; this page is always dark. */
+.nd {
+  --nd-bg: #0b0d11;
+  --nd-panel: #101216;
+  --nd-hairline: rgba(255, 255, 255, 0.08);
+  --nd-hairline-strong: rgba(255, 255, 255, 0.16);
+  --nd-dim: #1c212c;
+  --nd-accent: #3b5bff;
+  --nd-accent-text: #7b93ff; /* accent lightened for text contrast on #0b0d11 */
+  --nd-green: #22c55e;
+  --nd-red: #ef4444;
+  --nd-amber: #f59e0b;
+  --nd-muted: #6b7280;
+  --nd-muted-text: #9aa1ad;
+  --nd-text: #ecedf0;
+  --nd-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --nd-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  background: var(--nd-bg);
+  color: var(--nd-text);
+  border: 1px solid var(--nd-hairline);
+  border-radius: 16px;
+  /* no overflow:hidden here: it would break position: sticky on the stages */
+}

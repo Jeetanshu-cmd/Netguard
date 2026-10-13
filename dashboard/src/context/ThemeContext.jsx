@@ -4,13 +4,14 @@ import { ThemeContext } from './themeContextDefinition.js'
 const STORAGE_KEY = 'netguard-theme'
 
 function getInitialTheme() {
-  if (typeof window === 'undefined') return 'light'
-
-  const stored = window.localStorage.getItem(STORAGE_KEY)
-  if (stored === 'light' || stored === 'dark') return stored
-
-  const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-  return prefersDark ? 'dark' : 'light'
+  // Dark-first product: only an explicit saved choice switches to light.
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY)
+    if (stored === 'light' || stored === 'dark') return stored
+  } catch {
+    // storage unavailable (private mode / sandboxed frame)
+  }
+  return 'dark'
 }
 
 export function ThemeProvider({ children }) {
@@ -18,7 +19,11 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    window.localStorage.setItem(STORAGE_KEY, theme)
+    try {
+      window.localStorage.setItem(STORAGE_KEY, theme)
+    } catch {
+      // not persisted; fine
+    }
   }, [theme])
 
   const toggleTheme = useCallback(() => {

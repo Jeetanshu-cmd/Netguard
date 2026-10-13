@@ -3,7 +3,7 @@ NetGuard AI — Pydantic schemas (api/schemas.py)
 Mirrors AGENTS.md §4 exactly. Don't rename fields without updating both.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel
 
 
@@ -109,6 +109,10 @@ class AlertCreate(BaseModel):
     max_confidence: float
     flow_count: int = 1
     status: str = "open"
+
+
+class AlertUpdate(BaseModel):
+    status: Literal["open", "acknowledged", "resolved"]
 
 
 class StatsResponse(BaseModel):

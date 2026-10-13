@@ -1,8 +1,8 @@
 // Central REST client. Swaps between the mock layer and real fetch calls
 // based on VITE_USE_MOCKS, so components never branch on that flag.
 //
-// TODO(backend): once api/ is live, set VITE_USE_MOCKS=false in .env.local
-// and verify every endpoint below matches AGENTS.md + README §8.
+// Real responses are normalised to the shapes the pages already consume
+// ({ flows }, { alerts }); the API returns bare arrays for those routes.
 import { API_BASE_URL, USE_MOCKS } from '../utils/constants'
 import { getToken } from './tokenStorage'
 import { mockApi } from '../mocks/mockApi'
@@ -57,13 +57,15 @@ export const api = {
   async getFlows(params = {}) {
     if (USE_MOCKS) return mockApi.getFlows()
     const qs = new URLSearchParams(params).toString()
-    return request(`/flows${qs ? `?${qs}` : ''}`)
+    const data = await request(`/flows${qs ? `?${qs}` : ''}`)
+    return Array.isArray(data) ? { flows: data } : data
   },
 
   async getAlerts(params = {}) {
     if (USE_MOCKS) return mockApi.getAlerts()
     const qs = new URLSearchParams(params).toString()
-    return request(`/alerts${qs ? `?${qs}` : ''}`)
+    const data = await request(`/alerts${qs ? `?${qs}` : ''}`)
+    return Array.isArray(data) ? { alerts: data } : data
   },
 
   async acknowledgeAlert(id, status = 'acknowledged') {
@@ -75,6 +77,21 @@ export const api = {
     if (USE_MOCKS) return mockApi.getStats()
     const qs = new URLSearchParams(params).toString()
     return request(`/stats${qs ? `?${qs}` : ''}`)
+  },
+
+  // Per-label counts for a window: { total, counts: { Benign, DoS_DDoS, ... } }.
+  async getStatsSummary(params = {}) {
+    if (USE_MOCKS) return { total: 0, counts: {} }
+    const qs = new URLSearchParams(params).toString()
+    return request(`/stats${qs ? `?${qs}` : ''}`)
+  },
+
+  async getModelInfo() {
+    if (USE_MOCKS) {
+      // No real model behind the mock backend, so don't claim one (stat shows "—").
+      return { model_type: null, alert_threshold: 0.85 }
+    }
+    return request('/model-info', { auth: false })
   },
 
   async getHealth() {

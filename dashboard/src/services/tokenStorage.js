@@ -25,3 +25,15 @@ export function clearToken() {
     // no-op
   }
 }
+
+// The JWT payload carries the role claim ("admin" | "viewer"). Decoding is for
+// UI gating only; the API enforces roles on every request.
+export function getRoleFromToken(token) {
+  if (!token) return null
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(payload)).role ?? null
+  } catch {
+    return null
+  }
+}

@@ -6,9 +6,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from api.db import Alert, get_db
-from api.schemas import AlertResponse
+from api.schemas import AlertResponse, AlertUpdate
 
-from api.security import get_current_user
+from api.security import get_current_user, require_admin
 router = APIRouter(tags=["alerts"], dependencies=[Depends(get_current_user)])
 
 
@@ -44,4 +44,16 @@ def get_alert(id: int, db: Session = Depends(get_db)) -> AlertResponse:
     alert = db.scalar(select(Alert).where(Alert.id == id))
     if not alert:
         raise HTTPException(status_code=404, detail=f"Alert '{id}' not found")
+    return alert
+
+
+@router.patch("/alerts/{id}", response_model=AlertResponse, dependencies=[Depends(require_admin)])
+def update_alert(id: int, body: AlertUpdate, db: Session = Depends(get_db)) -> AlertResponse:
+    """Acknowledge / resolve an alert (README §8: PATCH /alerts/{id}, Admin only)."""
+    alert = db.scalar(select(Alert).where(Alert.id == id))
+    if not alert:
+        raise HTTPException(status_code=404, detail=f"Alert '{id}' not found")
+    alert.status = body.status
+    db.commit()
+    db.refresh(alert)
     return alert
